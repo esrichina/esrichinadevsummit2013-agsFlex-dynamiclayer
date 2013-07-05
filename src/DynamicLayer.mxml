@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application 
+	xmlns:fx="http://ns.adobe.com/mxml/2009" 
+	xmlns:s="library://ns.adobe.com/flex/spark"
+	xmlns:mx="library://ns.adobe.com/flex/mx"
+	xmlns:mylist="com.esri.dynamiclayers.*"
+	xmlns:esri="http://www.esri.com/2008/ags"
+	backgroundColor="white"
+	creationComplete="init();">
+	
+	<fx:Script>
+		<![CDATA[
+			import com.esri.ags.FeatureSet;
+			import com.esri.ags.Graphic;
+			import com.esri.ags.events.LayerEvent;
+			import com.esri.ags.events.QueryEvent;
+			import com.esri.ags.geometry.MapPoint;
+			
+			import mx.collections.ArrayList;
+			import mx.events.CollectionEvent;
+			import mx.utils.ObjectUtil;
+			
+			private function init():void {
+				arrColl.dispatchEvent(new CollectionEvent(CollectionEvent.COLLECTION_CHANGE));
+			}
+			
+			var dynamicLayerInfos:Array ;
+			
+			protected function queryts_executeCompleteHandler(event:QueryEvent):void
+			{
+				var featureSet:FeatureSet = event.featureSet;
+				myMap.defaultGraphicsLayer.clear();
+				for each(var g:Graphic in featureSet.features)
+				{
+					g.symbol=picsymbol;
+					myMap.defaultGraphicsLayer.add(g);
+					myMap.centerAt(g.geometry as MapPoint);
+					myMap.level=5;
+				}
+			}
+			
+			protected function qu_clickHandler(event:MouseEvent):void
+			{
+				queryts.source=source2;
+				if(te.text=="")
+				{
+					query.where="1=1";
+				}
+				else
+				{
+					query.where="name='"+te.text+"'";
+				}
+				queryts.execute(query);
+			}
+			
+			
+			private function arrColl_collectionChange(evt:CollectionEvent):void {
+				try {
+					myMap.defaultGraphicsLayer.clear();
+					dynamicLayerInfos= mydynamic.createDynamicLayerInfosFromLayerInfos();
+					var tArr:Array = arrColl.source.filter(selectedOnly);
+					for (var i:int = 0; i < tArr.length; i++)
+					{
+						dynamicLayerInfos[i] = tArr[i].data;
+					}
+					mydynamic.dynamicLayerInfos = dynamicLayerInfos;
+				} catch (err:Error) {
+					// ignore.
+				}
+			}
+			
+			private function selectedOnly(item:ListItemValueObject, idx:uint, arr:Array):Boolean {
+				return item.isSelected;
+			}
+			
+			protected function mydynamic_loadHandler(event:LayerEvent):void
+			{
+				mydynamic.layerDrawingOptions=[lakesLayerDrawingOptions,chinaDrawingOptions,riverDrawingOptions,chinarenkouDrawingOptions];
+				dynamicLayerInfos= mydynamic.createDynamicLayerInfosFromLayerInfos();
+			}
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!--	<my:MyCheckBox label="中国的点" value="lakesDynamicLayerInfo" click="showOrVisible(event)"/>
+		<my:MyCheckBox label="中国的面" value="chinainfo" click="showOrVisible(event)"/>
+		<my:MyCheckBox label="中国的线" value="riverinfo" click="showOrVisible(event)"/>-->
+		
+		<fx:Array id="arr">
+			<mylist:ListItemValueObject label="省会城市" isSelected="false"  data="{lakesDynamicLayerInfo}"/>
+			<mylist:ListItemValueObject label="河流" isSelected="false" data="{riverinfo}"/>
+			<mylist:ListItemValueObject label="省级行政区" isSelected="false" data="{chinainfo}"/>
+			<mylist:ListItemValueObject label="省级行政区1" isSelected="false" data="{chinarenkouinfo}" />
+			<mylist:ListItemValueObject label="公路" isSelected="false" />
+			<mylist:ListItemValueObject label="铁路" isSelected="false" />
+			<mylist:ListItemValueObject label="湖泊" isSelected="false" />
+			<mylist:ListItemValueObject label="一级河流" isSelected="false" />
+			<mylist:ListItemValueObject label="县级行政区" isSelected="false" />
+			<mylist:ListItemValueObject label="Ten" isSelected="false" />
+		</fx:Array>
+		
+		<mx:ArrayCollection id="arrColl"
+							source="{arr}"
+							collectionChange="arrColl_collectionChange(event);" />
+		<esri:QueryTask id="queryts" url="http://localhost:6080/arcgis/rest/services/china400baseMap/MapServer/dynamicLayer"
+						executeComplete="queryts_executeCompleteHandler(event)"	>
+		</esri:QueryTask>
+		
+		<esri:Query id="query" outSpatialReference="{myMap.spatialReference}"
+					outFields="*"
+					returnGeometry="true"
+					where="1=1"/>
+		<esri:SimpleFillSymbol id="sfs0"
+							   alpha="1"
+							   color="0x336600"
+							   outline="{sfsOutline}"
+							   style="solid"/>
+		<esri:SimpleFillSymbol id="sfs1"
+							   alpha="1"
+							   color="0x009933"
+							   outline="{sfsOutline}"
+							   style="solid"/>
+		<esri:SimpleFillSymbol id="sfs2"
+							   alpha="1"
+							   color="0x00CC33"
+							   outline="{sfsOutline}"
+							   style="solid"/>
+		<esri:SimpleFillSymbol id="sfs3"
+							   alpha="1"
+							   color="0x66FF66"
+							   outline="{sfsOutline}"
+							   style="solid"/>
+		<esri:SimpleFillSymbol id="sfs4"
+							   alpha="1"
+							   color="0xCCFF66"
+							   outline="{sfsOutline}"
+							   style="solid"/>
+		<esri:SimpleLineSymbol id="sfsOutline"
+							   alpha="0.1"
+							   color="0x1C272C"/>
+		
+		<!--!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!-->
+		<esri:SimpleFillSymbol id="sfs0a"
+							   alpha="1"
+							   color="0xFFFFCC"
+							   outline="{sfsOutline}"
+							   style="solid"/>
+		<esri:SimpleFillSymbol id="sfs1a"
+							   alpha="1"
+							   color="0xFFCC66"
+							   outline="{sfsOutline}"
+							   style="solid"/>
+		<esri:SimpleFillSymbol id="sfs2a"
+							   alpha="1"
+							   color="0xFF6600"
+							   outline="{sfsOutline}"
+							   style="solid"/>
+		<esri:SimpleFillSymbol id="sfs3a"
+							   alpha="1"
+							   color="0xFF0000"
+							   outline="{sfsOutline}"
+							   style="solid"/>
+		<esri:SimpleFillSymbol id="sfs4a"
+							   alpha="1"
+							   color="0xCC0000"
+							   outline="{sfsOutline}"
+							   style="solid"/>
+		
+		
+		<esri:LayerDrawingOptions id="chinaDrawingOptions" layerId="9997">
+			<esri:ClassBreaksRenderer field="AREA">
+				<esri:ClassBreakInfo label="0 to 500"
+									 maxValue="9.9"
+									 minValue="0"
+									 symbol="{sfs0}"/>
+				<esri:ClassBreakInfo label="501 to 10,000"
+									 maxValue="16"
+									 minValue="10"
+									 symbol="{sfs1}"/>
+				<esri:ClassBreakInfo label="10,001 to 30,000"
+									 maxValue="40"
+									 minValue="17"
+									 symbol="{sfs2}"/>
+				<esri:ClassBreakInfo label="30,001 to 90,000"
+									 maxValue="100"
+									 minValue="41"
+									 symbol="{sfs3}"/>
+				<esri:ClassBreakInfo label="90,001 to 10,000,000"
+									 maxValue="200"
+									 minValue="101"
+									 symbol="{sfs4}"/>
+			</esri:ClassBreaksRenderer>
+		</esri:LayerDrawingOptions>
+		
+		<esri:LayerDrawingOptions id="chinarenkouDrawingOptions" layerId="9996">
+			<esri:ClassBreaksRenderer field="AREA">
+				<esri:ClassBreakInfo label="0 to 500"
+									 maxValue="9.9"
+									 minValue="0"
+									 symbol="{sfs0a}"/>
+				<esri:ClassBreakInfo label="501 to 10,000"
+									 maxValue="16"
+									 minValue="10"
+									 symbol="{sfs1a}"/>
+				<esri:ClassBreakInfo label="10,001 to 30,000"
+									 maxValue="40"
+									 minValue="17"
+									 symbol="{sfs2a}"/>
+				<esri:ClassBreakInfo label="30,001 to 90,000"
+									 maxValue="100"
+									 minValue="41"
+									 symbol="{sfs3a}"/>
+				<esri:ClassBreakInfo label="90,001 to 10,000,000"
+									 maxValue="200"
+									 minValue="101"
+									 symbol="{sfs4a}"/>
+			</esri:ClassBreaksRenderer>
+		</esri:LayerDrawingOptions>
+		
+		<esri:LayerDrawingOptions id="lakesLayerDrawingOptions" layerId="9999">
+			<esri:SimpleRenderer>
+				<esri:SimpleMarkerSymbol color="0xFF3300" size="12" style="circle" alpha="0.7">
+					<esri:SimpleLineSymbol width="1"
+										   color="0x000000"
+										   style="solid"/>
+				</esri:SimpleMarkerSymbol>
+			</esri:SimpleRenderer>
+		</esri:LayerDrawingOptions>
+		
+		<esri:LayerDrawingOptions id="riverDrawingOptions" layerId="9998">
+			<esri:SimpleRenderer>
+				<esri:SimpleLineSymbol width="1"
+									   color="0x3366FF"
+									   style="solid"/>
+			</esri:SimpleRenderer>
+		</esri:LayerDrawingOptions>
+		
+		<esri:DynamicLayerInfo id="lakesDynamicLayerInfo" layerId="9999"  name="lakesDynamicLayerInfo"
+							   defaultVisibility="true">
+			<esri:LayerDataSource id="source2" >
+				<esri:TableDataSource id="source1" dataSourceName="province_pt" workspaceId="china400FileGDB" />
+			</esri:LayerDataSource>
+		</esri:DynamicLayerInfo>
+		<esri:DynamicLayerInfo id="chinainfo" layerId="9997" name="chinainfo"
+							   defaultVisibility="true">
+			<esri:LayerDataSource>
+				<esri:TableDataSource dataSourceName="province_poly" workspaceId="china400FileGDB"/>
+			</esri:LayerDataSource>
+		</esri:DynamicLayerInfo>
+		<esri:DynamicLayerInfo id="chinarenkouinfo" layerId="9996" name="chinarenkouinfo"
+							   defaultVisibility="true">
+			<esri:LayerDataSource>
+				<esri:TableDataSource dataSourceName="province_poly" workspaceId="china400FileGDB"/>
+			</esri:LayerDataSource>
+		</esri:DynamicLayerInfo>
+		<esri:DynamicLayerInfo id="riverinfo" layerId="9998" name="riverinfo"
+							   defaultVisibility="true">
+			<esri:LayerDataSource>
+				<esri:TableDataSource dataSourceName="hyd2_line" workspaceId="china400FileGDB"/>
+			</esri:LayerDataSource>
+		</esri:DynamicLayerInfo>
+		<esri:PictureMarkerSymbol id="picsymbol" source="asset/Red_glow.swf">
+			
+		</esri:PictureMarkerSymbol>
+	</fx:Declarations>
+	
+	<esri:Map id="myMap">
+		<esri:ArcGISTiledMapServiceLayer url="http://localhost:7080/PBS/rest/services/china/MapServer"/>
+		<esri:ArcGISDynamicMapServiceLayer id="mydynamic"  load="mydynamic_loadHandler(event)"
+										   url="http://192.168.100.110:6080/arcgis/rest/services/china400baseMap/MapServer"
+										   visibleLayers="{new ArrayList([9996,9997,9998,9999])}">
+		</esri:ArcGISDynamicMapServiceLayer>
+	</esri:Map>
+	
+	<mx:Panel id="panel"
+			  right="20" top="20"
+			  title="图层列表" horizontalAlign="center"
+			  styleName="opaquePanel">
+		<mx:List id="list" 
+				 dragEnabled="true"
+				 dragMoveEnabled="true"
+				 dropEnabled="true"
+				 dataProvider="{arrColl}"
+				 alternatingItemColors="[#EEEEEE, white]"
+				 width="150"
+				 rowCount="8">
+			<mx:itemRenderer>
+				<fx:Component>
+					<mx:CheckBox selectedField="isSelected"
+								 change="onChange(event);">
+						<fx:Script>
+							<![CDATA[
+								private function onChange(evt:Event):void {
+									data.isSelected = !data.isSelected;
+								}
+							]]>
+						</fx:Script>
+					</mx:CheckBox>
+				</fx:Component>
+			</mx:itemRenderer>
+		</mx:List>
+		<s:Label text="输入名称点击查询" left="5" />
+		<s:TextInput id="te"/>
+		<s:Button id="qu" label="查询" click="qu_clickHandler(event)"/>
+	</mx:Panel>
+	
+	
+	
+</s:Application>
